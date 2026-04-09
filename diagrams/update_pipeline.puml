@@ -1,0 +1,63 @@
+@startuml Update Pipeline
+skinparam backgroundColor #FEFEFE
+skinparam ArrowColor #333333
+skinparam BoxBorderColor #666666
+skinparam NoteBackgroundColor #FFFACD
+
+actor "Scheduler\n(cron / schedule)" as CRON
+
+box "update_index.py" #E8F4FD
+  participant "FileScanner" as FS
+  participant "TextSplitter\n(500 chars, overlap 50)" as SP
+  participant "EmbeddingModel\n(all-MiniLM-L6-v2)" as EM
+  participant "FAISS\nVectorStore" as FAISS
+  participant "StateTracker\n(file_state.json)" as ST
+end box
+
+database "knowledge_base/\n*.md, *.txt" as KB
+database "index/\nfaiss_index" as IDX
+collections "logs/\nupdate_history.jsonl" as LOG
+
+CRON -> FS : trigger (06:00 daily)
+activate FS
+
+FS -> ST : load file_state.json\n{filepath: mtime}
+ST --> FS : previous state
+
+FS -> KB : scan all *.md, *.txt
+KB --> FS : file list with mtimes
+
+FS -> ST : compare mtimes
+note right of FS
+  New file: not in state
+  Changed: mtime differs
+end note
+
+FS -> SP : pass new/changed files
+deactivate FS
+activate SP
+
+SP -> SP : RecursiveCharacterTextSplitter\nsplit_text(content)
+SP -> EM : chunks list
+deactivate SP
+activate EM
+
+EM -> EM : encode(chunks)\n→ 384-dim vectors
+EM -> FAISS : add_documents(docs + embeddings)
+deactivate EM
+activate FAISS
+
+FAISS -> IDX : save_local(INDEX_DIR)
+IDX --> FAISS : saved
+deactivate FAISS
+
+ST -> ST : update {filepath: new_mtime}
+ST -> LOG : write JSON entry\n{timestamp, new_chunks,\nfiles_processed, elapsed}
+
+note right of LOG
+  Example:
+  index updated 2025-07-17,
+  3 files added, 0 errors
+end note
+
+@enduml

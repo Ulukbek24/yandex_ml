@@ -57,8 +57,8 @@ def build_index():
     # Ленивый импорт — чтобы не падать при проверке скрипта без зависимостей
     from langchain_community.vectorstores import FAISS
     from langchain_community.embeddings import HuggingFaceEmbeddings
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
-    from langchain.schema import Document
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from langchain_core.documents import Document
 
     start_time = time.time()
 
