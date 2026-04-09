@@ -245,8 +245,8 @@ DEMO_QUESTIONS_KNOWN = [
     "Кто такой Krath Velgor и какова его история?",
     "Чем отличается Radiant Path от Void Path в использовании Synth Flux?",
     "Что такое Void Core Station и как её уничтожили в Битве за Xerath?",
-    "Какого цвета лезвие Flux Blade у носителей Radiant Path и почему?",
-    "Расскажи об Echo Base на планете Frorath.",
+    "Какого цвета лезвие Flux Blade у Luminari и что этот цвет символизирует?",
+    "Что такое Echo Base и где она расположена?",
 ]
 
 DEMO_QUESTIONS_UNKNOWN = [
