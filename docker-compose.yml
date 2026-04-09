@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+  rag-bot:
+    build: .
+    container_name: rag_bot
+    env_file:
+      - .env
+    environment:
+      - KNOWLEDGE_BASE_DIR=/app/knowledge_base
+      - INDEX_DIR=/app/index
+      - LLM_MODEL=gpt-4o-mini
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - TOP_K=5
+    volumes:
+      - ./knowledge_base:/app/knowledge_base:ro
+      - index_data:/app/index
+      - ./logs:/app/logs
+    stdin_open: true
+    tty: true
+    command: ["python", "rag_bot.py"]
+
+  index-builder:
+    build: .
+    container_name: rag_index_builder
+    env_file:
+      - .env
+    environment:
+      - KNOWLEDGE_BASE_DIR=/app/knowledge_base
+      - INDEX_DIR=/app/index
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+    volumes:
+      - ./knowledge_base:/app/knowledge_base:ro
+      - index_data:/app/index
+      - ./logs:/app/logs
+    command: ["python", "build_index.py"]
+    profiles:
+      - build
+
+  index-updater:
+    build: .
+    container_name: rag_index_updater
+    env_file:
+      - .env
+    environment:
+      - KNOWLEDGE_BASE_DIR=/app/knowledge_base
+      - INDEX_DIR=/app/index
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+    volumes:
+      - ./knowledge_base:/app/knowledge_base:ro
+      - index_data:/app/index
+      - ./logs:/app/logs
+    command: ["python", "update_index.py", "--schedule"]
+    profiles:
+      - updater
+
+volumes:
+  index_data:
